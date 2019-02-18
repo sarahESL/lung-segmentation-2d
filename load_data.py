@@ -13,11 +13,24 @@ It may be more convenient to store preprocessed data for faster loading.
 Dataframe should contain paths to images and masks as two columns (relative to `path`).
 """
 
+def minVal(currentVal, currentMin):
+    if(currentVal < currentMin):
+        return currentVal
+    return currentMin
+
+def maxVal(currentVal, currentMax):
+    if(currentVal > currentMax):
+        return currentVal
+    return currentMax
+
 def loadDataJSRT(df, path, im_shape):
     """This function loads data preprocessed with `preprocess_JSRT.py`"""
     X, y = [], []
+    min_, max_ = 0, 0
     for i, item in df.iterrows():
         img = io.imread(path + item[0])
+        min_ = minVal(min_, img.min())
+        max_ = maxVal(max_, img.max())
         img = transform.resize(img, im_shape)
         img = np.expand_dims(img, -1)
         mask = io.imread(path + item[1])
@@ -35,7 +48,8 @@ def loadDataJSRT(df, path, im_shape):
     print ('\t{}\t{}'.format(X.shape, y.shape))
     print ('\tX:{:.1f}-{:.1f}\ty:{:.1f}-{:.1f}\n'.format(X.min(), X.max(), y.min(), y.max()))
     print ('\tX.mean = {}, X.std = {}'.format(X.mean(), X.std()))
-    return X, y
+    print('min, max ', min_, max_)
+    return X, y, min_, max_
 
 
 def loadDataMontgomery(df, path, im_shape):

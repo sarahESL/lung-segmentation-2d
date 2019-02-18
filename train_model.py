@@ -5,12 +5,13 @@ from build_model import build_UNet2D_4L
 import pandas as pd
 from keras.utils import plot_model
 from keras.callbacks import ModelCheckpoint
+from art.classifiers import KerasClassifier
 
 if __name__ == '__main__':
 
     # Path to csv-file. File should contain X-ray filenames as first column,
     # mask filenames as second column.
-    csv_path = '/home/sedigheh/lung_playground/dataset/JSRT/preprocessed_org_with_mask/idx.csv'
+    # csv_path = '/home/sedigheh/lung_playground/dataset/JSRT/preprocessed_org_with_mask/idx.csv'
     # csv_path = '/home/sedigheh/lung_playground/dataset/JSRT/augmented/AugmentedImages/preprocessed/idx.csv'
     # Path to the folder with images. Images will be read from path + path_from_csv
     path = csv_path[:csv_path.rfind('/')] + '/'
@@ -24,7 +25,7 @@ if __name__ == '__main__':
 
     # Load training and validation data
     im_shape = (256, 256)
-    X_train, y_train = loadDataJSRT(df_train, path, im_shape)
+    X_train, y_train, min_, max_ = loadDataJSRT(df_train, path, im_shape)
     X_val, y_val = loadDataJSRT(df_val, path, im_shape)
 
     # Build model
@@ -33,12 +34,14 @@ if __name__ == '__main__':
     UNet = build_UNet2D_4L(inp_shape)
     UNet.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
+    classifier = KerasClassifier((min_, max_), model=UNet)
+
     # Visualize model
     plot_model(UNet, 'model.png', show_shapes=True)
 
     ##########################################################################################
     model_file_format = 'model.{epoch:03d}.hdf5'
-    print (model_file_format)
+    print(model_file_format)
     checkpointer = ModelCheckpoint(model_file_format, period=10)
 
     train_gen = ImageDataGenerator(rotation_range=10,
@@ -52,10 +55,11 @@ if __name__ == '__main__':
     test_gen = ImageDataGenerator(rescale=1.)
 
     batch_size = 8
-    UNet.fit_generator(train_gen.flow(X_train, y_train, batch_size),
-                       steps_per_epoch=(X_train.shape[0] + batch_size - 1) // batch_size,
-                       epochs=100,
-                       batch_size=8,
-                       callbacks=[checkpointer],
-                       validation_data=test_gen.flow(X_val, y_val),
-                       validation_steps=(X_val.shape[0] + batch_size - 1) // batch_size)
+    # UNet.fit_generator(train_gen.flow(X_train, y_train, batch_size),
+    #                   steps_per_epoch=(X_train.shape[0] + batch_size - 1) // batch_size,
+    #                   epochs=100,
+    #                   batch_size=8,
+    #                   callbacks=[checkpointer],
+    #                   validation_data=test_gen.flow(X_val, y_val),
+    #                   validation_steps=(X_val.shape[0] + batch_size - 1) // batch_size)
+    classifier.fit(X_train, y_train, nb_epochs=5, batch_size=128)
