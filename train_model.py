@@ -3,21 +3,22 @@ from load_data import loadDataMontgomery, loadDataJSRT
 from build_model import build_UNet2D_4L
 
 import pandas as pd
-from keras.utils.vis_utils import plot_model
+# from keras.utils import plot_model
 from keras.callbacks import ModelCheckpoint
 
 if __name__ == '__main__':
 
     # Path to csv-file. File should contain X-ray filenames as first column,
     # mask filenames as second column.
-    csv_path = '/path/to/JSRT/idx.csv'
+    csv_path = '/home/sedigheh/lung_segmentation/dataset/JSRT/preprocessed_org_with_mask/idx.csv'
+    # csv_path = '/home/sedigheh/lung_playground/dataset/JSRT/augmented/AugmentedImages/preprocessed/idx.csv'
     # Path to the folder with images. Images will be read from path + path_from_csv
     path = csv_path[:csv_path.rfind('/')] + '/'
 
     df = pd.read_csv(csv_path)
     # Shuffle rows in dataframe. Random state is set for reproducibility.
     df = df.sample(frac=1, random_state=23)
-    n_train = int(len(df))
+    n_train = int(0.8 * len(df))
     df_train = df[:n_train]
     df_val = df[n_train:]
 
@@ -27,16 +28,17 @@ if __name__ == '__main__':
     X_val, y_val = loadDataJSRT(df_val, path, im_shape)
 
     # Build model
-    inp_shape = X_train[0].shape
+    org_shape = X_train[0].shape
+    inp_shape = (org_shape[0], org_shape[1], org_shape[2])
     UNet = build_UNet2D_4L(inp_shape)
     UNet.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
     # Visualize model
-    plot_model(UNet, 'model.png', show_shapes=True)
+    # plot_model(UNet, 'model.png', show_shapes=True)
 
     ##########################################################################################
     model_file_format = 'model.{epoch:03d}.hdf5'
-    print model_file_format
+    print (model_file_format)
     checkpointer = ModelCheckpoint(model_file_format, period=10)
 
     train_gen = ImageDataGenerator(rotation_range=10,
