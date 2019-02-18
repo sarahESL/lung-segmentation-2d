@@ -30,11 +30,11 @@ def loadDataJSRT(df, path, im_shape):
     X -= X.mean()
     X /= X.std()
 
-    print '### Data loaded'
-    print '\t{}'.format(path)
-    print '\t{}\t{}'.format(X.shape, y.shape)
-    print '\tX:{:.1f}-{:.1f}\ty:{:.1f}-{:.1f}\n'.format(X.min(), X.max(), y.min(), y.max())
-    print '\tX.mean = {}, X.std = {}'.format(X.mean(), X.std())
+    print ('### Data loaded')
+    print ('\t{}'.format(path))
+    print ('\t{}\t{}'.format(X.shape, y.shape))
+    print ('\tX:{:.1f}-{:.1f}\ty:{:.1f}-{:.1f}\n'.format(X.min(), X.max(), y.min(), y.max()))
+    print ('\tX.mean = {}, X.std = {}'.format(X.mean(), X.std()))
     return X, y
 
 
@@ -60,11 +60,11 @@ def loadDataMontgomery(df, path, im_shape):
     X -= X.mean()
     X /= X.std()
 
-    print '### Data loaded'
-    print '\t{}'.format(path)
-    print '\t{}\t{}'.format(X.shape, y.shape)
-    print '\tX:{:.1f}-{:.1f}\ty:{:.1f}-{:.1f}\n'.format(X.min(), X.max(), y.min(), y.max())
-    print '\tX.mean = {}, X.std = {}'.format(X.mean(), X.std())
+    print ('### Data loaded')
+    print ('\t{}'.format(path))
+    print ('\t{}\t{}'.format(X.shape, y.shape))
+    print ('\tX:{:.1f}-{:.1f}\ty:{:.1f}-{:.1f}\n'.format(X.min(), X.max(), y.min(), y.max()))
+    print ('\tX.mean = {}, X.std = {}'.format(X.mean(), X.std()))
     return X, y
 
 
@@ -86,10 +86,10 @@ def loadDataGeneral(df, path, im_shape):
     X -= X.mean()
     X /= X.std()
 
-    print '### Dataset loaded'
-    print '\t{}'.format(path)
-    print '\t{}\t{}'.format(X.shape, y.shape)
-    print '\tX:{:.1f}-{:.1f}\ty:{:.1f}-{:.1f}\n'.format(X.min(), X.max(), y.min(), y.max())
-    print '\tX.mean = {}, X.std = {}'.format(X.mean(), X.std())
+    print ('### Dataset loaded')
+    print ('\t{}'.format(path))
+    print ('\t{}\t{}'.format(X.shape, y.shape))
+    print ('\tX:{:.1f}-{:.1f}\ty:{:.1f}-{:.1f}\n'.format(X.min(), X.max(), y.min(), y.max()))
+    print ('\tX.mean = {}, X.std = {}'.format(X.mean(), X.std()))
     return X, y
 

@@ -28,7 +28,8 @@ def masked(img, gt, mask, alpha=1):
     filled with blue."""
     rows, cols = img.shape
     color_mask = np.zeros((rows, cols, 3))
-    boundary = morphology.dilation(gt, morphology.disk(3)) - gt
+    boundary = morphology.dilation(gt, morphology.disk(3)) ^ gt
+    print(boundary)
     color_mask[mask == 1] = [0, 0, 1]
     color_mask[boundary == 1] = [1, 0, 0]
     img_color = np.dstack((img, img, img))
@@ -52,7 +53,7 @@ if __name__ == '__main__':
 
     # Path to csv-file. File should contain X-ray filenames as first column,
     # mask filenames as second column.
-    csv_path = '/path/to/JSRT/idx.csv'
+    csv_path = '/home/sedigheh/lung_playground/dataset/JSRT/preprocessed_org_with_mask/idx.csv'
     # Path to the folder with images. Images will be read from path + path_from_csv
     path = csv_path[:csv_path.rfind('/')] + '/'
 
@@ -92,12 +93,12 @@ if __name__ == '__main__':
 
         ious[i] = IoU(gt, pr)
         dices[i] = Dice(gt, pr)
-        print df.iloc[i][0], ious[i], dices[i]
+        print(df.iloc[i][0], ious[i], dices[i])
 
         i += 1
         if i == n_test:
             break
 
-    print 'Mean IoU:', ious.mean()
-    print 'Mean Dice:', dices.mean()
+    print('Mean IoU:', ious.mean())
+    print('Mean Dice:', dices.mean())
 
