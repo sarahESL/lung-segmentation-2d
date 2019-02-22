@@ -25,6 +25,7 @@ def loadDataJSRT(df, path, im_shape):
         mask = np.expand_dims(mask, -1)
         X.append(img)
         y.append(mask)
+
     X = np.array(X)
     y = np.array(y)
     X -= X.mean()

@@ -5,6 +5,9 @@ import pandas as pd
 from keras.models import load_model
 from keras.preprocessing.image import ImageDataGenerator
 from skimage import morphology, color, io, exposure
+from train_model import train
+import tensorflow as tf
+import keras as K
 
 def IoU(y_true, y_pred):
     """Returns Intersection over Union score for ground truth and predicted masks."""
@@ -50,10 +53,12 @@ def remove_small_regions(img, size):
     return img
 
 if __name__ == '__main__':
-
     # Path to csv-file. File should contain X-ray filenames as first column,
     # mask filenames as second column.
-    csv_path = '/home/sedigheh/lung_playground/dataset/JSRT/preprocessed_org_with_mask/idx.csv'
+    perturbation = train()
+    print("******Start of Inference*****")
+    # print(perturbation.eval())
+    csv_path = '/home/sedigheh/lung_segmentation/dataset/JSRT/preprocessed_org_with_mask/idx.csv'
     # Path to the folder with images. Images will be read from path + path_from_csv
     path = csv_path[:csv_path.rfind('/')] + '/'
 
@@ -62,6 +67,22 @@ if __name__ == '__main__':
     # Load test data
     im_shape = (256, 256)
     X, y = loadDataJSRT(df, path, im_shape)
+
+    print("*******Perturb Images******")
+    sess = tf.InteractiveSession()
+    init = tf.global_variables_initializer()
+    t = X[0] + perturbation
+
+    X_adversarial = []
+    for i in range(X.shape[0]):
+        X_adversarial.append(X[i] + perturbation)
+
+    print(len(X_adversarial))
+    print(X_adversarial[0].shape)
+    X_adversarial = np.array(X_adversarial)
+    print("Original X shape: ", X.shape)
+    print("Adversarial X shape: ", X_adversarial.shape)
+    input("wait")
 
     n_test = X.shape[0]
     inp_shape = X[0].shape
@@ -77,6 +98,7 @@ if __name__ == '__main__':
     dices = np.zeros(n_test)
 
     i = 0
+    """
     for xx, yy in test_gen.flow(X, y, batch_size=1):
         img = exposure.rescale_intensity(np.squeeze(xx), out_range=(0,1))
         pred = UNet.predict(xx)[..., 0].reshape(inp_shape[:2])
@@ -98,7 +120,30 @@ if __name__ == '__main__':
         i += 1
         if i == n_test:
             break
+    """
 
+    print("******Evaluation with adversarial examples*******")
+    for xx, yy in test_gen.flow(X_adversarial, y, batch_size=1):
+        img = exposure.rescale_intensity(np.squeeze(xx), out_range=(0,1))
+        pred = UNet.predict(xx)[..., 0].reshape(inp_shape[:2])
+        mask = yy[..., 0].reshape(inp_shape[:2])
+
+        # Binarize masks
+        gt = mask > 0.5
+        pr = pred > 0.5
+
+        # Remove regions smaller than 2% of the image
+        pr = remove_small_regions(pr, 0.02 * np.prod(im_shape))
+
+        io.imsave('results/{}'.format(df.iloc[i][0]), masked(img, gt, pr, 1))
+
+        ious[i] = IoU(gt, pr)
+        dices[i] = Dice(gt, pr)
+        print(df.iloc[i][0], ious[i], dices[i])
+
+        i += 1
+        if i == n_test:
+            break
     print('Mean IoU:', ious.mean())
     print('Mean Dice:', dices.mean())
 

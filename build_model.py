@@ -1,12 +1,12 @@
 from keras.models import Model
 import keras.layers as kl
-from keras.layers import Input, Convolution2D, MaxPooling2D, UpSampling2D
+from keras.layers import Input, Conv2D, Convolution2D, MaxPooling2D, UpSampling2D
 
 
 def build_UNet2D_4L(inp_shape, k_size=3):
     merge_axis = -1 # Feature maps are concatenated along last axis (for tf backend)
     data = Input(shape=inp_shape)
-    conv1 = Convolution2D(filters=32, kernel_size=k_size, padding='same', activation='relu')(data)
+    conv1 = Conv2D(filters=32, kernel_size=k_size, padding='same', activation='relu')(data)
     conv1 = Convolution2D(filters=32, kernel_size=k_size, padding='same', activation='relu')(conv1)
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
 
@@ -51,5 +51,6 @@ def build_UNet2D_4L(inp_shape, k_size=3):
     conv10 = Convolution2D(filters=1, kernel_size=k_size, padding='same', activation='sigmoid')(conv9)
 
     output = conv10
-    model = Model(data, output)
+    model = Model(data, output)  # Figure out why this like this, how does this exactly make a UNET
+    print(model.outputs[0])
     return model
