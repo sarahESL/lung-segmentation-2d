@@ -55,7 +55,14 @@ def remove_small_regions(img, size):
 if __name__ == '__main__':
     # Path to csv-file. File should contain X-ray filenames as first column,
     # mask filenames as second column.
-    perturbation = train()
+    # Load model
+    # sess = tf.InteractiveSession()
+    # init = tf.global_variables_initializer()
+    # model_name = 'trained_model.hdf5'
+    model_name = 'model.029.hdf5'
+    UNet = load_model(model_name)
+    #perturbation = train()
+    perturbation = np.load("/home/sedigheh/lung_segmentation/perturbation_grad_wrt_x0.npy")
     print("******Start of Inference*****")
     # print(perturbation.eval())
     csv_path = '/home/sedigheh/lung_segmentation/dataset/JSRT/preprocessed_org_with_mask/idx.csv'
@@ -66,30 +73,30 @@ if __name__ == '__main__':
 
     # Load test data
     im_shape = (256, 256)
-    X, y = loadDataJSRT(df, path, im_shape)
+    df_first = df[df['JPCLN001.png']== 'JPCLN087.png']
+    X, y = loadDataJSRT(df_first, path, im_shape)
+    # X, y = loadDataJSRT(df, path, im_shape)
+    # print(X[0])
+    # print(df_first.shape)
 
-    print("*******Perturb Images******")
-    sess = tf.InteractiveSession()
-    init = tf.global_variables_initializer()
-    t = X[0] + perturbation
+    # print("*******Perturb Images******")
 
     X_adversarial = []
     for i in range(X.shape[0]):
-        X_adversarial.append(X[i] + perturbation)
+        X_adversarial.append(X[i] + perturbation[i])
+        # X_adversarial.append(X[i] + np.random.normal(0, 1, X[0].shape))
 
-    print(len(X_adversarial))
-    print(X_adversarial[0].shape)
     X_adversarial = np.array(X_adversarial)
-    print("Original X shape: ", X.shape)
-    print("Adversarial X shape: ", X_adversarial.shape)
-    input("wait")
+    # print("Original X shape: ", X.shape)
+    # print("Adversarial X shape: ", X_adversarial.shape)
 
     n_test = X.shape[0]
     inp_shape = X[0].shape
+    # print(X_adversarial[0])
+    # print(perturbation[0])
+    # print("diff: ", X[0] - X_adversarial[0])
+    # input("wait")
 
-    # Load model
-    model_name = 'trained_model.hdf5'
-    UNet = load_model(model_name)
 
     # For inference standard keras ImageGenerator is used.
     test_gen = ImageDataGenerator(rescale=1.)
@@ -120,8 +127,8 @@ if __name__ == '__main__':
         i += 1
         if i == n_test:
             break
-    """
 
+    """
     print("******Evaluation with adversarial examples*******")
     for xx, yy in test_gen.flow(X_adversarial, y, batch_size=1):
         img = exposure.rescale_intensity(np.squeeze(xx), out_range=(0,1))
@@ -135,11 +142,12 @@ if __name__ == '__main__':
         # Remove regions smaller than 2% of the image
         pr = remove_small_regions(pr, 0.02 * np.prod(im_shape))
 
-        io.imsave('results/{}'.format(df.iloc[i][0]), masked(img, gt, pr, 1))
+        io.imsave('results_adversarial_examples/{}'.format(df_first.iloc[i][0]), img)
+        io.imsave('results_adversarial_segmentations/{}'.format(df_first.iloc[i][0]), masked(img, gt, pr, 1))
 
         ious[i] = IoU(gt, pr)
         dices[i] = Dice(gt, pr)
-        print(df.iloc[i][0], ious[i], dices[i])
+        print(df_first.iloc[i][0], ious[i], dices[i])
 
         i += 1
         if i == n_test:
