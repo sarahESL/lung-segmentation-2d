@@ -53,6 +53,7 @@ docs/_build/
 
 
 results/
+results-ct/
 results_adversarial_segmentations/
 results_adversarial_examples/
 *.hdf5

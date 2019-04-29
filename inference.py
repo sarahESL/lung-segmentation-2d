@@ -59,13 +59,16 @@ if __name__ == '__main__':
     # sess = tf.InteractiveSession()
     # init = tf.global_variables_initializer()
     # model_name = 'trained_model.hdf5'
-    model_name = 'model.029.hdf5'
+    model_name = 'model.099.hdf5'
     UNet = load_model(model_name)
     #perturbation = train()
-    perturbation = np.load("/home/sedigheh/lung_segmentation/perturbation_grad_wrt_x0.npy")
-    print("******Start of Inference*****")
+    grad_sign = np.load("/home/sedigheh/lung_segmentation/gradient_signs/grad_wrt_x0.npy")
+    epsilon = 0.2
+    perturbation = grad_sign * epsilon
+    # print("******Start of Inference*****")
     # print(perturbation.eval())
     csv_path = '/home/sedigheh/lung_segmentation/dataset/JSRT/preprocessed_org_with_mask/idx.csv'
+    # csv_path = '/home/sedigheh/lung_segmentation/dataset/CT-kaggle-lung/mixed/idx.csv'
     # Path to the folder with images. Images will be read from path + path_from_csv
     path = csv_path[:csv_path.rfind('/')] + '/'
 
@@ -118,7 +121,10 @@ if __name__ == '__main__':
         # Remove regions smaller than 2% of the image
         pr = remove_small_regions(pr, 0.02 * np.prod(im_shape))
 
-        io.imsave('results/{}'.format(df.iloc[i][0]), masked(img, gt, pr, 1))
+        # io.imsave('results-ct/{}'.format(df.iloc[i][0]), masked(img, gt, pr, 1))
+        print(img)
+        io.imsave('results-ct/{}'.format(df.iloc[i][0]), img)
+        input("wait")
 
         ious[i] = IoU(gt, pr)
         dices[i] = Dice(gt, pr)
@@ -154,4 +160,3 @@ if __name__ == '__main__':
             break
     print('Mean IoU:', ious.mean())
     print('Mean Dice:', dices.mean())
-
