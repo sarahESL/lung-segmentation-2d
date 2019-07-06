@@ -9,31 +9,26 @@ import imageio
 from skimage import io, exposure
 import argparse
 import sys
+from tqdm import tqdm
 
 
-# ROOT = '/home/sedigheh/lung_segmentation/dataset/JSRT/JSRT'
-ROOT = '/home/sedigheh/lung_segmentation/dataset/CT-kaggle-lung/2d_images'
+ROOT = '/home/sedigheh/lung_segmentation/dataset/JSRT/JSRT'
+# ROOT = '/home/sedigheh/lung_segmentation/dataset/CT-kaggle-lung/2d_images'
+# ROOT = '/home/sedigheh/lung_segmentation/dataset/MontgomerySet/CXR_png'
 
 
 def make_lungs():
-    for i, filename in enumerate(os.listdir(ROOT)):
+    for i, filename in tqdm(enumerate(os.listdir(ROOT))):
         if(filename != "preprocessed"):
-            print(filename)
             input_path = os.path.join(ROOT, filename)
             img = imageio.imread(input_path)
-            print(img.shape)
-            input("wa")
-            print(img)
-            input("wa")
             img = 1 - imageio.imread(input_path) * 1/255
             # img = imageio.imread(input_path).reshape(2048, 2048)
             # img = imageio.imread(input_path).reshape(512, 512, 3)
             img = imageio.imread(input_path).reshape(512, 512)
             img = exposure.equalize_adapthist(img)
-            print(img)
             output_path = os.path.join(ROOT, 'preprocessed', filename)
             io.imsave(output_path, img)
-            input("wait")
             print('Lung', i+1, filename)
 
 
@@ -63,6 +58,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Preprocess images")
     parser.add_argument("--mode",
-                        help="Supported modes are lung(s) and mask(s)")
+                        help="Supported modes are lung(s) and mask(s). " +
+                        "Defaults to lungs.",
+                        default="lungs")
     args = parser.parse_args()
     main(args.mode)
