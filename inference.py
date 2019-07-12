@@ -60,24 +60,30 @@ if __name__ == '__main__':
     # sess = tf.InteractiveSession()
     # init = tf.global_variables_initializer()
     # model_name = 'trained_model.hdf5'
-    model_name = 'model.099.hdf5'
+    # model_name = 'model.099.hdf5'
+    model_name = 'trained_model_montgomery.hdf5'
     UNet = load_model(model_name)
     #perturbation = train()
-    grad_sign = np.load("/home/sedigheh/lung_segmentation/gradient_signs/grad_wrt_x0.npy")
+    grad_sign = np.load("/home/sedigheh/lung_segmentation/gradient_signs/montgomery_grad_wrt_x0.npy")
     # print("******Start of Inference*****")
     # print(perturbation.eval())
-    csv_path = '/home/sedigheh/lung_segmentation/dataset/JSRT/preprocessed_org_with_mask/idx.csv'
+    # csv_path = '/home/sedigheh/lung_segmentation/dataset/JSRT/preprocessed_org_with_mask/idx.csv'
     # csv_path = '/home/sedigheh/lung_segmentation/dataset/CT-kaggle-lung/mixed/idx.csv'
     # Path to the folder with images. Images will be read from path + path_from_csv
+    csv_path = '/home/sedigheh/lung_segmentation/dataset/MontgomerySet/mixed_images_masks/idx.csv'
     path = csv_path[:csv_path.rfind('/')] + '/'
 
     df = pd.read_csv(csv_path)
+    print(df.head())
 
     # Load test data
     im_shape = (256, 256)
-    df_first = df[df['JPCLN001.png']== 'JPCLN087.png']
+    # df_first = df[df['JPCLN001.png']== 'JPCLN087.png']
+    df_first = df[df['MCUCXR_0054_0.png']== 'MCUCXR_0041_0.png']
     # X, y = loadDataJSRT(df_first, path, im_shape)
-    X, y = loadDataJSRT(df, path, im_shape)
+    # X, y = loadDataJSRT(df, path, im_shape)
+    print("Loading images...")
+    X, y = loadDataMontgomery(df_first, path, im_shape)
     # print(X[0])
     # print(df_first.shape)
 
@@ -100,7 +106,7 @@ if __name__ == '__main__':
     ious = np.zeros(n_test)
     dices = np.zeros(n_test)
     i = 0
-
+    '''
     for xx, yy in test_gen.flow(X, y, batch_size=1):
         img = exposure.rescale_intensity(np.squeeze(xx), out_range=(0,1))
         pred = UNet.predict(xx)[..., 0].reshape(inp_shape[:2])
@@ -126,10 +132,9 @@ if __name__ == '__main__':
             break
     print('Mean IoU:', ious.mean())
     print('Mean Dice:', dices.mean())
-
-    """
+    '''
     print("******Evaluation with adversarial examples*******")
-    epsilon = [0, 0.01, 0.05, 0.1, 0.15, 0.2, 0.3]
+    epsilon = [0, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5]
     results = {}
     for eps in epsilon:
         perturbation = grad_sign * eps
@@ -154,8 +159,8 @@ if __name__ == '__main__':
         # Remove regions smaller than 2% of the image
             pr = remove_small_regions(pr, 0.02 * np.prod(im_shape))
 
-            io.imsave('results_adversarial_examples/{}_{}'.format(eps, df_first.iloc[i][0]), img)
-            io.imsave('results_adversarial_segmentations/{}_{}'.format(eps, df_first.iloc[i][0]), masked(img, gt, pr, 1))
+            io.imsave('results_adversarial_examples_montgomery/{}_{}'.format(eps, df_first.iloc[i][0]), img)
+            io.imsave('results_adversarial_segmentations_montgomery/{}_{}'.format(eps, df_first.iloc[i][0]), masked(img, gt, pr, 1))
 
             ious[i] = IoU(gt, pr)
             dices[i] = Dice(gt, pr)
@@ -169,6 +174,5 @@ if __name__ == '__main__':
         print('Mean Dice:', dices.mean())
         results[eps] = {"ious_mean": ious.mean(), "dices_mean": dices.mean()}
 
-    with open("performances/fgsm_jsrt.json", 'w') as f:
+    with open("performances/fgsm_montgomery.json", 'w') as f:
         json.dump(results, f)
-    """
